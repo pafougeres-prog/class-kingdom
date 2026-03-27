@@ -7,15 +7,16 @@
 
 <h1>Class Kingdom</h1>
 
-<input id="name" placeholder="Your name">
-<button onclick="login()">Start</button>
+<input id="nickname" placeholder="Nickname">
+<input id="password" placeholder="Password (5 digits)" type="password">
+
+<button onclick="login()">Login</button>
 
 <p id="player"></p>
 <p id="gold">Gold: 0</p>
 
 <button onclick="addGold()">+10 Gold</button>
 
-<!-- Supabase v2 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -28,47 +29,37 @@ const supabaseClient = createClient(supabaseUrl, supabaseKey);
 let playerId = null;
 
 async function login() {
-  const name = document.getElementById("name").value;
+  const nickname = document.getElementById("nickname").value.trim().toLowerCase();
+  const password = document.getElementById("password").value.trim();
 
-  if (!name) {
-    alert("Enter a name");
+  if (!nickname || !password) {
+    alert("Enter nickname and password");
     return;
   }
 
-  // Check if player exists
   let { data, error } = await supabaseClient
     .from("players")
     .select("*")
-    .eq("name", name);
+    .eq("nickname", nickname)
+    .eq("password", password);
 
   if (error) {
     console.log(error);
-    alert("Error login");
+    alert("Error");
     return;
   }
 
-  if (data.length > 0) {
-    playerId = data[0].id;
-    updateUI(data[0]);
-  } else {
-    let { data: newPlayer, error: insertError } = await supabaseClient
-      .from("players")
-      .insert([{ name: name }])
-      .select();
-
-    if (insertError) {
-      console.log(insertError);
-      alert("Error creating player");
-      return;
-    }
-
-    playerId = newPlayer[0].id;
-    updateUI(newPlayer[0]);
+  if (data.length === 0) {
+    alert("Wrong nickname or password");
+    return;
   }
+
+  playerId = data[0].id;
+  updateUI(data[0]);
 }
 
 function updateUI(player) {
-  document.getElementById("player").innerText = "Player: " + player.name;
+  document.getElementById("player").innerText = "Player: " + player.nickname;
   document.getElementById("gold").innerText = "Gold: " + player.gold;
 }
 
@@ -91,19 +82,12 @@ async function addGold() {
 
   let newGold = data.gold + 10;
 
-  let { error: updateError } = await supabaseClient
+  await supabaseClient
     .from("players")
     .update({ gold: newGold })
     .eq("id", playerId);
-
-  if (updateError) {
-    console.log(updateError);
-    return;
-  }
 
   document.getElementById("gold").innerText = "Gold: " + newGold;
 }
 </script>
 
-</body>
-</html>
