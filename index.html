@@ -62,6 +62,7 @@ async function login() {
 function updateUI(player) {
   document.getElementById("player").innerText = "Player: " + player.nickname;
   document.getElementById("gold").innerText = "Gold: " + player.gold;
+  document.getElementById("avatar").src = player.avatar;
 }
 
 async function addGold() {
